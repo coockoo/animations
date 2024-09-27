@@ -9,8 +9,8 @@ const dx = 49;
 const minProjectileLen = 50;
 const maxProjectileLen = 700;
 
-const minSteps = 6000;
-const maxSteps = 10000;
+const minSteps = 8000;
+const maxSteps = 12000;
 
 const projectileCount = 10;
 
@@ -105,13 +105,15 @@ function createProjectile(count, span) {
 function drawHProjectile(projectile, time) {
   ctx.save();
 
-  const { steps, len } = projectile;
+  const { steps, len, dir } = projectile;
   const totalWidth = width + len;
   const step = ((time % steps) / steps) * totalWidth;
-  const x = ((projectile.startPos + step) % totalWidth) - len;
+  const x = ((projectile.startPos + step * dir + totalWidth) % totalWidth) - len;
   const y = gety(projectile.row);
 
-  ctx.fillStyle = createLineGradient(x, y, x + len, y);
+  const start = dir === 1 ? x : x + len;
+  const end = dir === 1 ? x + len : x;
+  ctx.fillStyle = createLineGradient(start, y, end, y);
   ctx.fillRect(x, y, len, 1);
   ctx.restore();
 }
@@ -123,13 +125,15 @@ function drawHProjectile(projectile, time) {
 function drawVProjectile(projectile, time) {
   ctx.save();
 
-  const { steps, len } = projectile;
+  const { steps, len, dir } = projectile;
   const totalHeight = height + len;
   const step = ((time % steps) / steps) * totalHeight;
   const x = getx(projectile.row);
-  const y = ((projectile.startPos + step) % totalHeight) - len;
+  const y = ((projectile.startPos + step * dir + totalHeight) % totalHeight) - len;
 
-  ctx.fillStyle = createLineGradient(x, y, x, y + len);
+  const start = dir === 1 ? y : y + len;
+  const end = dir === 1 ? y + len : y;
+  ctx.fillStyle = createLineGradient(x, start, x, end);
   ctx.fillRect(x, y, 1, len);
   ctx.restore();
 }
