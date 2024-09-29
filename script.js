@@ -9,6 +9,9 @@ const dx = 49;
 const minProjectileLen = 50;
 const maxProjectileLen = 700;
 
+const minDurationMs = 5000;
+const maxDurationMs = 15000;
+
 const minSteps = 8000;
 const maxSteps = 12000;
 
@@ -16,14 +19,32 @@ const projectileCount = 10;
 
 const lineColor = 'hsla(0, 0%, 60%, 0.1)';
 
+const fadeOutDurationMs = 1000;
+
+/**
+ * @typedef {Object} Projectile
+ * @property {number} startTime
+ * @property {number} duration
+ * @property {number} row
+ * @property {number} len
+ * @property {number} startPos
+ * @property {number} dir
+ * @property {number} steps TODO: replace with speed
+ */
+
 /** @type {CanvasRenderingContext2D} */
 let ctx;
 /** @type {number} */
 let width;
 /** @type {number} */
 let height;
-
+/** @type {number} */
+let rcount;
+/** @type {number} */
+let ccount;
+/** @type {Projectile[]} */
 let hprojectiles = [];
+/** @type {Projectile[]} */
 let vprojectiles = [];
 
 function main() {
@@ -51,11 +72,11 @@ function main() {
   });
   observer.observe(canvas.parentElement);
 
-  const rcount = getrcount();
+  rcount = getrcount();
   for (let i = 0; i < projectileCount; ++i) {
     hprojectiles.push(createProjectile(rcount, width));
   }
-  const ccount = getccount();
+  ccount = getccount();
   for (let i = 0; i < projectileCount; ++i) {
     vprojectiles.push(createProjectile(ccount, height));
   }
@@ -80,6 +101,20 @@ function draw(time) {
     drawVProjectile(projectile, time);
   }
 
+  for (let i = 0; i < hprojectiles.length; ++i) {
+    const projectile = hprojectiles[i];
+    if (projectile.startTime + projectile.duration <= time) {
+      hprojectiles[i] = createProjectile(rcount, width, time);
+    }
+  }
+
+  for (let i = 0; i < vprojectiles.length; ++i) {
+    const projectile = vprojectiles[i];
+    if (projectile.startTime + projectile.duration <= time) {
+      vprojectiles[i] = createProjectile(ccount, height, time);
+    }
+  }
+
   window.requestAnimationFrame(draw);
 }
 
@@ -87,15 +122,18 @@ function draw(time) {
  * Creates direction-agnostic model of the projectile
  * @param {number} count Number of rows to pick from
  * @param {number} span  Total width/height of the trajectory
+ * @param {number} [currentTime] When this projectile was created (default document.timeline.currentTime)
+ * @returns {Projectile} projectile
  */
-function createProjectile(count, span) {
-  const len = minProjectileLen + Math.random() * (maxProjectileLen - minProjectileLen);
-  const steps = minSteps + Math.random() * (maxSteps - minSteps);
-  const startTime = Date.now();
+function createProjectile(count, span, currentTime) {
+  const len = rand(minProjectileLen, maxProjectileLen);
+  const steps = rand(minSteps, maxSteps);
+  const startTime = currentTime || document.timeline.currentTime;
+  const duration = rand(minDurationMs, maxDurationMs);
   const row = Math.floor(Math.random() * count) % count;
   const startPos = Math.floor(Math.random() * span) % span;
   const dir = Math.random() < 0.5 ? -1 : 1;
-  return { startTime, row, len, startPos, dir, steps };
+  return { startTime, duration, row, len, startPos, dir, steps };
 }
 
 /**
@@ -105,7 +143,7 @@ function createProjectile(count, span) {
 function drawHProjectile(projectile, time) {
   ctx.save();
 
-  const { steps, len, dir } = projectile;
+  const { startTime, duration, steps, len, dir } = projectile;
   const totalWidth = width + len;
   const step = ((time % steps) / steps) * totalWidth;
   const x = ((projectile.startPos + step * dir + totalWidth) % totalWidth) - len;
@@ -114,6 +152,10 @@ function drawHProjectile(projectile, time) {
   const start = dir === 1 ? x : x + len;
   const end = dir === 1 ? x + len : x;
   ctx.fillStyle = createLineGradient(start, y, end, y);
+  const toTime = startTime + duration - time;
+  if (toTime < fadeOutDurationMs) {
+    ctx.globalAlpha = toTime > 0 ? toTime / fadeOutDurationMs : 0;
+  }
   ctx.fillRect(x, y, len, 1);
   ctx.restore();
 }
@@ -125,7 +167,7 @@ function drawHProjectile(projectile, time) {
 function drawVProjectile(projectile, time) {
   ctx.save();
 
-  const { steps, len, dir } = projectile;
+  const { startTime, duration, steps, len, dir } = projectile;
   const totalHeight = height + len;
   const step = ((time % steps) / steps) * totalHeight;
   const x = getx(projectile.row);
@@ -134,6 +176,10 @@ function drawVProjectile(projectile, time) {
   const start = dir === 1 ? y : y + len;
   const end = dir === 1 ? y + len : y;
   ctx.fillStyle = createLineGradient(x, start, x, end);
+  const toTime = startTime + duration - time;
+  if (toTime < fadeOutDurationMs) {
+    ctx.globalAlpha = toTime > 0 ? toTime / fadeOutDurationMs : 0;
+  }
   ctx.fillRect(x, y, 1, len);
   ctx.restore();
 }
@@ -146,9 +192,12 @@ function drawVProjectile(projectile, time) {
  */
 function createLineGradient(x0, y0, x1, y1) {
   const gradient = ctx.createLinearGradient(x0, y0, x1, y1);
+  // debugging values
+  // gradient.addColorStop(0, 'rgba(255, 0, 0, 0.5)');
+  // gradient.addColorStop(1, 'black');
   gradient.addColorStop(0, 'rgba(174, 255, 132, 0.43)');
   gradient.addColorStop(0.0001, 'rgba(167, 217, 254, 0)');
-  gradient.addColorStop(0.224, 'rgb(169, 239, 255)');
+  gradient.addColorStop(0.224, 'rgba(169, 239, 255, 1)');
   gradient.addColorStop(0.6562, 'rgba(178, 255, 230, 1)');
   gradient.addColorStop(0.9427, 'rgba(178, 255, 230, 0)');
   return gradient;
@@ -196,4 +245,13 @@ function getrcount() {
 
 function getccount() {
   return Math.ceil((width - getx(0)) / dx);
+}
+
+/**
+ * Gets randome value from the range [min, max]
+ * @param {number} min Lower bound of the range
+ * @param {number} max Upper bound of the range
+ */
+function rand(min, max) {
+  return min + Math.random() * (max - min);
 }
