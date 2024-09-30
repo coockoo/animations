@@ -137,16 +137,26 @@ function createProjectile(count, span, currentTime) {
 }
 
 /**
+ * @param {Projectile} projectile
+ * @param {number} span
+ * @param {number} time
+ */
+function withStep(projectile, span, time) {
+  const { len, steps, startPos, dir } = projectile;
+  const total = span + len;
+  const step = ((time % steps) / steps) * total;
+  return ((startPos + step * dir + total) % total) - len;
+}
+
+/**
  * @param {any} projectile
  * @param {number} time
  */
 function drawHProjectile(projectile, time) {
   ctx.save();
 
-  const { startTime, duration, steps, len, dir } = projectile;
-  const totalWidth = width + len;
-  const step = ((time % steps) / steps) * totalWidth;
-  const x = ((projectile.startPos + step * dir + totalWidth) % totalWidth) - len;
+  const { startTime, duration, len, dir } = projectile;
+  const x = withStep(projectile, width, time);
   const y = gety(projectile.row);
 
   const start = dir === 1 ? x : x + len;
@@ -167,11 +177,9 @@ function drawHProjectile(projectile, time) {
 function drawVProjectile(projectile, time) {
   ctx.save();
 
-  const { startTime, duration, steps, len, dir } = projectile;
-  const totalHeight = height + len;
-  const step = ((time % steps) / steps) * totalHeight;
+  const { startTime, duration, len, dir } = projectile;
   const x = getx(projectile.row);
-  const y = ((projectile.startPos + step * dir + totalHeight) % totalHeight) - len;
+  const y = withStep(projectile, height, time);
 
   const start = dir === 1 ? y : y + len;
   const end = dir === 1 ? y + len : y;
