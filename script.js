@@ -176,7 +176,7 @@ function getOpacity(projectile, time) {
 }
 
 /**
- * @param {any} projectile
+ * @param {Projectile} projectile
  * @param {number} time
  */
 function drawHProjectile(projectile, time) {
@@ -195,7 +195,7 @@ function drawHProjectile(projectile, time) {
 }
 
 /**
- * @param {any} projectile
+ * @param {Projectile} projectile
  * @param {number} time
  */
 function drawVProjectile(projectile, time) {
