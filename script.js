@@ -25,13 +25,13 @@ const fadeOutDurationMs = 1000;
 // stop, r, g, b, a
 const grad = [
   // debugging values
-  [0, 255, 0, 0, 0.5],
-  [1, 0, 0, 0, 1],
-  // [0, 174, 255, 132, 0.43],
-  // [0.0001, 167, 217, 254, 0],
-  // [0.224, 169, 239, 255, 1],
-  // [0.6562, 178, 255, 230, 1],
-  // [0.9427, 178, 255, 230, 0],
+  // [0, 255, 0, 0, 0.5],
+  // [1, 0, 0, 0, 1],
+  [0, 174, 255, 132, 0.43],
+  [0.0001, 167, 217, 254, 0],
+  [0.224, 169, 239, 255, 1],
+  [0.6562, 178, 255, 230, 1],
+  [0.9427, 178, 255, 230, 0],
 ];
 
 /**
@@ -161,6 +161,20 @@ function withStep(projectile, span, time) {
   return ((startPos + step * dir + total) % total) - len;
 }
 
+function getOpacity(projectile, time) {
+  const { startTime, duration } = projectile;
+  let opacity = 1;
+  const toTime = startTime + duration - time;
+  if (toTime < fadeOutDurationMs) {
+    opacity = toTime > 0 ? toTime / fadeOutDurationMs : 0;
+  }
+  const fromTime = time - startTime;
+  if (fromTime < fadeInDurationMs) {
+    opacity = fromTime > 0 ? fromTime / fadeInDurationMs : 0;
+  }
+  return opacity;
+}
+
 /**
  * @param {any} projectile
  * @param {number} time
@@ -168,17 +182,13 @@ function withStep(projectile, span, time) {
 function drawHProjectile(projectile, time) {
   ctx.save();
 
-  const { startTime, duration, len, dir } = projectile;
+  const { len, dir } = projectile;
   const x = withStep(projectile, width, time);
   const y = gety(projectile.row);
 
   const start = dir === 1 ? x : x + len;
   const end = dir === 1 ? x + len : x;
-  let opacity = 1;
-  const toTime = startTime + duration - time;
-  if (toTime < fadeOutDurationMs) {
-    opacity = toTime > 0 ? toTime / fadeOutDurationMs : 0;
-  }
+  const opacity = getOpacity(projectile, time);
   ctx.fillStyle = createLineGradient(start, y, end, y, opacity);
   ctx.fillRect(x, y, len, 1);
   ctx.restore();
@@ -191,17 +201,13 @@ function drawHProjectile(projectile, time) {
 function drawVProjectile(projectile, time) {
   ctx.save();
 
-  const { startTime, duration, len, dir } = projectile;
+  const { len, dir } = projectile;
   const x = getx(projectile.row);
   const y = withStep(projectile, height, time);
 
   const start = dir === 1 ? y : y + len;
   const end = dir === 1 ? y + len : y;
-  let opacity = 1;
-  const toTime = startTime + duration - time;
-  if (toTime < fadeOutDurationMs) {
-    opacity = toTime > 0 ? toTime / fadeOutDurationMs : 0;
-  }
+  const opacity = getOpacity(projectile, time);
   ctx.fillStyle = createLineGradient(x, start, x, end, opacity);
   ctx.fillRect(x, y, 1, len);
   ctx.restore();
