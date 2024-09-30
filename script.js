@@ -19,7 +19,20 @@ const projectileCount = 10;
 
 const lineColor = 'hsla(0, 0%, 60%, 0.1)';
 
+const fadeInDurationMs = 1000;
 const fadeOutDurationMs = 1000;
+
+// stop, r, g, b, a
+const grad = [
+  // debugging values
+  [0, 255, 0, 0, 0.5],
+  [1, 0, 0, 0, 1],
+  // [0, 174, 255, 132, 0.43],
+  // [0.0001, 167, 217, 254, 0],
+  // [0.224, 169, 239, 255, 1],
+  // [0.6562, 178, 255, 230, 1],
+  // [0.9427, 178, 255, 230, 0],
+];
 
 /**
  * @typedef {Object} Projectile
@@ -161,11 +174,12 @@ function drawHProjectile(projectile, time) {
 
   const start = dir === 1 ? x : x + len;
   const end = dir === 1 ? x + len : x;
-  ctx.fillStyle = createLineGradient(start, y, end, y);
+  let opacity = 1;
   const toTime = startTime + duration - time;
   if (toTime < fadeOutDurationMs) {
-    ctx.globalAlpha = toTime > 0 ? toTime / fadeOutDurationMs : 0;
+    opacity = toTime > 0 ? toTime / fadeOutDurationMs : 0;
   }
+  ctx.fillStyle = createLineGradient(start, y, end, y, opacity);
   ctx.fillRect(x, y, len, 1);
   ctx.restore();
 }
@@ -183,11 +197,12 @@ function drawVProjectile(projectile, time) {
 
   const start = dir === 1 ? y : y + len;
   const end = dir === 1 ? y + len : y;
-  ctx.fillStyle = createLineGradient(x, start, x, end);
+  let opacity = 1;
   const toTime = startTime + duration - time;
   if (toTime < fadeOutDurationMs) {
-    ctx.globalAlpha = toTime > 0 ? toTime / fadeOutDurationMs : 0;
+    opacity = toTime > 0 ? toTime / fadeOutDurationMs : 0;
   }
+  ctx.fillStyle = createLineGradient(x, start, x, end, opacity);
   ctx.fillRect(x, y, 1, len);
   ctx.restore();
 }
@@ -197,17 +212,14 @@ function drawVProjectile(projectile, time) {
  * @param {number} y0
  * @param {number} x1
  * @param {number} y1
+ * @param {number} opacity
  */
-function createLineGradient(x0, y0, x1, y1) {
+function createLineGradient(x0, y0, x1, y1, opacity) {
   const gradient = ctx.createLinearGradient(x0, y0, x1, y1);
-  // debugging values
-  // gradient.addColorStop(0, 'rgba(255, 0, 0, 0.5)');
-  // gradient.addColorStop(1, 'black');
-  gradient.addColorStop(0, 'rgba(174, 255, 132, 0.43)');
-  gradient.addColorStop(0.0001, 'rgba(167, 217, 254, 0)');
-  gradient.addColorStop(0.224, 'rgba(169, 239, 255, 1)');
-  gradient.addColorStop(0.6562, 'rgba(178, 255, 230, 1)');
-  gradient.addColorStop(0.9427, 'rgba(178, 255, 230, 0)');
+  grad.forEach(([s, r, g, b, _a]) => {
+    const a = _a * opacity;
+    gradient.addColorStop(s, `rgba(${r}, ${g}, ${b}, ${a})`);
+  });
   return gradient;
 }
 
