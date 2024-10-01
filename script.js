@@ -1,10 +1,6 @@
 document.addEventListener('DOMContentLoaded', main);
 
-const starty = 5;
-const dy = 81;
-
-const startx = 21;
-const dx = 49;
+const grid = { startx: 21, dx: 49, starty: 5, dy: 81 };
 
 const minProjectileLen = 50;
 const maxProjectileLen = 700;
@@ -230,23 +226,23 @@ function createLineGradient(x0, y0, x1, y1, opacity) {
 }
 
 function drawHorizontalLines() {
-  let y = starty || dy;
+  let y = gety(0);
   ctx.save();
   ctx.fillStyle = lineColor;
   while (y < height) {
     ctx.fillRect(0, y, width, 1);
-    y += dy;
+    y += grid.dy;
   }
   ctx.restore();
 }
 
 function drawVerticalLines() {
-  let x = startx || dx;
+  let x = getx(0);
   ctx.save();
   ctx.fillStyle = lineColor;
   while (x < width) {
     ctx.fillRect(x, 0, 1, height);
-    x += dx;
+    x += grid.dx;
   }
   ctx.restore();
 }
@@ -255,22 +251,22 @@ function drawVerticalLines() {
  * @param {number} row
  */
 function gety(row) {
-  return (starty || dy) + dy * row;
+  return (grid.starty || grid.dy) + grid.dy * row;
 }
 
 /**
  * @param {number} row
  */
 function getx(row) {
-  return (startx || dx) + dx * row;
+  return (grid.startx || grid.dx) + grid.dx * row;
 }
 
 function getrcount() {
-  return Math.ceil((height - gety(0)) / dy);
+  return Math.ceil((height - gety(0)) / grid.dy);
 }
 
 function getccount() {
-  return Math.ceil((width - getx(0)) / dx);
+  return Math.ceil((width - getx(0)) / grid.dx);
 }
 
 /**
