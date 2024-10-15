@@ -182,8 +182,7 @@ function drawHProjectile(projectile, time) {
   const x = withStep(projectile, width, time);
   const y = gety(projectile.row);
 
-  const start = dir === 1 ? x : x + len;
-  const end = dir === 1 ? x + len : x;
+  const [start, end] = adjustForDir(dir, x, len);
   const opacity = getOpacity(projectile, time);
   ctx.fillStyle = createLineGradient(start, y, end, y, opacity);
   ctx.fillRect(x, y, len, 1);
@@ -201,12 +200,25 @@ function drawVProjectile(projectile, time) {
   const x = getx(projectile.row);
   const y = withStep(projectile, height, time);
 
-  const start = dir === 1 ? y : y + len;
-  const end = dir === 1 ? y + len : y;
+  const [start, end] = adjustForDir(dir, y, len);
   const opacity = getOpacity(projectile, time);
   ctx.fillStyle = createLineGradient(x, start, x, end, opacity);
   ctx.fillRect(x, y, 1, len);
   ctx.restore();
+}
+
+/**
+ * @param {number} dir
+ * @param {number} start
+ * @param {number} len
+ * @returns {[number, number]} result
+ */
+function adjustForDir(dir, start, len) {
+  const res = [start, start + len];
+  if (dir < 0) {
+    res.reverse();
+  }
+  return res;
 }
 
 /**
